@@ -3,7 +3,7 @@ import path from 'path';
 
 // Set storage engine
 const storage = multer.diskStorage({
-    destination : './uploads/',
+    destination : './public/post/',
     filename : ( req, file, cb) => {
         cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
     }
@@ -12,7 +12,7 @@ const storage = multer.diskStorage({
 // Initial upload
 const upload = multer({
     storage,
-    limits: { fileSize : 1000000}, //1MB
+    limits: { fileSize: 1 * 1024 * 1024 }, // 10 MB
     fileFilter : ( req, file, cb)=>{
         checkFileType(file,cb)
     }
@@ -20,14 +20,18 @@ const upload = multer({
 
 // Check file type
 function checkFileType(file, cb) {
-    const fileTypes = /jpg|jpg|png/;
-    const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = fileTypes.test(file.mimetype);
+    // Allowed mime types
+    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    const isValidMimeType = allowedMimeTypes.includes(file.mimetype);
 
-    if (extname && mimetype) {
+    // Allowed extensions
+    const filetypes = /jpeg|jpg|png/;
+    const isValidExtName = filetypes.test(path.extname(file.originalname).toLowerCase());
+
+    if (isValidMimeType && isValidExtName) {
         return cb(null, true);
     }else{
-        cb('Error: image only')
+        cb(new Error('Error: Only JPEG and PNG images are allowed!'));
     }
 }
 

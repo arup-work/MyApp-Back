@@ -6,8 +6,8 @@ import authenticateToken from '../middlewares/authenticateToken.js';
 
 const authRoute =  express.Router();
 
-authRoute.post('/login', [validationMiddleware(loginSchema)],AuthService.login);
 authRoute.post('/register',[validationMiddleware(registerSchema)], AuthService.register);
+authRoute.post('/login', [validationMiddleware(loginSchema)],AuthService.login);
 authRoute.post('/change-password',[validationMiddleware(changePasswordSchema)], [authenticateToken], AuthService.changePassword);
 
 authRoute.post('/forget-password',[validationMiddleware(forgetPasswordSchema),AuthService.forgetPassword ])

@@ -1,29 +1,84 @@
-import upload from "../config/multer.js";
-import Post from "../models/post.js";
+import mongoose from "mongoose";
+import PostService from "../services/post.service.js";
 
 export default class PostController {
-    static async createPost(req, res, next) {
-        console.log(req.body);
-        upload.single('file')(req, res, async (err) => {
-            if (err) {
-                return res.status(400).json({
-                    message: err
-                })
-            }
-            const { title, description } = req.body;
-            console.log(req.files);
-            const image = req.file ? req.file.path : "null";
-            const newPost = await Post.create({
-                title,
-                description,
-                image
-            })
 
+    static async index(req, res, next) {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        try {
+            const posts =  await PostService.index(page, limit);
             return res.status(200).json({
-                message: "Post created succesfully"
+                message: '',
+                posts : posts
+            });
+        } catch (error) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
+    static async createPost(req, res, next) {
+        try {
+            const result = await PostService.createPost(req, res);
+            return res.status(result.status).json({
+                message: result.message,
+                post : result.newPost
             })
-        })
+        } catch (error) {
+            return res.status(result.status).json({
+                message: error.message
+            })
+        }
     }
 
+    static async updatePost(req, res) {
+        try {
+            const result = await PostService.updatePost(req, res);
+            return res.status(200).json({
+                message: result.message,
+                post : result.updatedPost
+            })
+        } catch (error) {
+            return res.status(500).json({
+                message: error.message
+            })
+        }
+    }
+
+    static async fetchPost(req, res) {
+        const { postId } = req.params;
+
+        // Validate the postId
+        if (!mongoose.Types.ObjectId.isValid(postId)) {
+            return res.status(400).json({
+                message: "Invalid post ID"
+            })
+        }
+        try {
+            const result = await PostService.fetchPost(postId);
+            return res.status(200).json({
+                message: result.message,
+                post : result.post
+            })
+        } catch (error) {
+            return res.status(404).json({
+                message: error.message
+            })
+        }
+    }
+
+    static async deletePost(req, res, next) {
+        const { postId } = req.params;
+        try {
+            const deletePost = await PostService.deletePost(postId);
+            return res.status(200).json({
+                message: "Post deleted successfully",
+                post : deletePost
+            })
+        } catch (error) {
+            return res.status(500).json({
+                message: error.message
+            })
+        }
+    }
 }
 

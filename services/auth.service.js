@@ -39,14 +39,13 @@ export default class AuthService {
 
         // Exclude the password field from the response
         const { id, name, email: userEmail } = user;
-        console.log("user_details", id, name, email);
 
         // Sign a JWT token
         const token = JWT.sign({
             email
         }, process.env.ACCESS_TOKEN_SECRET_KEY);
 
-        res.status(200).json({
+        return res.status(200).json({
             msg: "Login successfully!",
             token,
             user: { id, name, email: userEmail }
