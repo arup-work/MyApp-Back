@@ -77,7 +77,7 @@ export default class AuthService {
             }, process.env.ACCESS_TOKEN_SECRET_KEY);
 
             return res.status(200).json({
-                message: "Registration successful, now you can login with email & password",
+                message: "Congratulation, your Registration is successful!",
                 user: { id: user.id, name, email: user.email },
                 // token
             });
@@ -154,6 +154,7 @@ export default class AuthService {
             // Generate a reset token
             const resetToken = crypto.randomBytes(32).toString('hex');
             const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+            console.log(resetTokenHash);
 
             // Set token and expiry on user (assuming your User model has these fields)
             user.resetPasswordToken = resetTokenHash;
