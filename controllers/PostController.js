@@ -69,10 +69,10 @@ export default class PostController {
     static async deletePost(req, res, next) {
         const { postId } = req.params;
         try {
-            const deletePost = await PostService.deletePost(postId);
-            return res.status(200).json({
-                message: "Post deleted successfully",
-                post : deletePost
+            const result = await PostService.deletePost(postId);
+            return res.status(result.status).json({
+                message: result.message,
+                post : result.post
             })
         } catch (error) {
             return res.status(500).json({

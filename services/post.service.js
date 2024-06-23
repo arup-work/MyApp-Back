@@ -67,9 +67,20 @@ class PostService {
                 const image = req.file ? req.file.path.replace(/\\/g, '/').replace('public/', '') : null;
 
                 try {
-                    const updatedPost = await Post.findByIdAndUpdate(postId, {
-                        title, description, image
-                    }, { new: true });
+                    const post =  await Post.findById(postId);
+                    if (!post) {
+                        return reject({ status: 404, message: 'Post not found' });
+                    }
+
+                    post.title = title;
+                    post.description = description;
+
+                    if (req.file) {
+                        post.image = req.file.path.replace(/\\/g, '/').replace('public/', '');
+                    }
+
+                    const updatedPost = await post.save();
+
                     if (!updatedPost) {
                         throw new Error('Post not found');
                     }
@@ -86,6 +97,19 @@ class PostService {
                 }
             })
         })
+    }
+
+    static async deletePost(postId){
+        try {
+            const post = await Post.findById(postId);
+            if (!post) {
+               throw new Error("Post not found!")
+            }
+            await post.deleteOne();
+            return { status: 200, message: "Post deleted successfully", post };
+        } catch (error) {
+            throw { status: error.status || 500, message: error.message };
+        }
     }
 
     static async fetchPost(postId) {
