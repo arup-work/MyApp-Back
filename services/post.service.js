@@ -8,7 +8,7 @@ class PostService {
 
         try {
             const totalPost = await Post.countDocuments();
-            const posts = await Post.find().skip(skip).limit(limit);
+            const posts = await Post.find().sort({ createdAt: -1}).skip(skip).limit(limit);
             // Construct the full URL of the image 
             const postsWithFullImagePath = posts.map(post => ({
                 ...post._doc,
