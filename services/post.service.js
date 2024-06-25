@@ -39,7 +39,8 @@ class PostService {
                     const newPost = await Post.create({
                         title,
                         description,
-                        image: imagePath
+                        image: imagePath,
+                        userId: req.user.id
                     });
 
                     // Check if the file exists and construct the full URL

@@ -42,7 +42,8 @@ export default class AuthService {
 
         // Sign a JWT token
         const token = JWT.sign({
-            email
+            email,
+            id
         }, process.env.ACCESS_TOKEN_SECRET_KEY);
 
         return res.status(200).json({

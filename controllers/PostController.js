@@ -18,6 +18,7 @@ export default class PostController {
     }
     static async createPost(req, res, next) {
         try {
+            console.log(req.user);
             const result = await PostService.createPost(req, res);
             return res.status(result.status).json({
                 message: result.message,
