@@ -37,6 +37,13 @@ export default class AuthService {
             })
         }
 
+        //Check user verified email or not 
+        if (!user.isVerifiedEmail) {
+            return res.status(401).json({
+                message: "Email is not verified. Please check your email! "
+            })
+        }
+
         // Exclude the password field from the response
         const { id, name, email: userEmail } = user;
 
@@ -72,13 +79,30 @@ export default class AuthService {
             // Proceed with user registration since email is unique and validation passed
             const user = await User.create({ name, email, password: hashedPassword });
 
+            // Generate a verification token
+            const verificationToken = crypto.randomBytes(32).toString('hex');
+            user.verificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+            user.verificationTokenExpire = Date.now() + 3600000; // 1 hour
+            await user.save();
+            
+            // Send verification mail
+            const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
+            const context = { verificationUrl, name : user.name };
+            await emailQueue.add({ 
+                email: user.email, 
+                subject: 'Verify Email', 
+                template: 'verifyEmailTemplate.ejs',
+                context: context 
+            });
+
+
             // Generate JWT token
             const token = JWT.sign({
                email:  user.email
             }, process.env.ACCESS_TOKEN_SECRET_KEY);
 
             return res.status(200).json({
-                message: "Congratulation, your Registration is successful!",
+                message: "Congratulations your Registration is successful. Please verify your email",
                 user: { id: user.id, name, email: user.email },
                 // token
             });
@@ -97,6 +121,35 @@ export default class AuthService {
             next(error);
         }
 
+    }
+
+    static async verifyEmail(req, res, next) {
+        try {
+            const { token } = req.params;
+            const hashedToken = crypto.createHash('sha256').update(token).digest("hex");
+
+            const user = await User.findOne({
+                verificationToken : hashedToken,
+                verificationTokenExpire: { $gt: Date.now()}
+            });
+
+            if (!user) {
+                return res.status(400).json({
+                    message : "Token is invalid or expired!"
+                })
+            }
+
+            user.isVerifiedEmail = true;
+            user.verificationToken = undefined;
+            user.verificationTokenExpire = undefined;
+            await user.save();
+
+            return res.status(200).json({
+                message: "Email verify successfully!"
+            })
+        } catch (error) {
+            next(error);
+        }
     }
 
     static async changePassword(req, res, next) {
@@ -155,7 +208,6 @@ export default class AuthService {
             // Generate a reset token
             const resetToken = crypto.randomBytes(32).toString('hex');
             const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
-            console.log(resetTokenHash);
 
             // Set token and expiry on user (assuming your User model has these fields)
             user.resetPasswordToken = resetTokenHash;

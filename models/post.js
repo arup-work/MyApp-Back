@@ -20,11 +20,7 @@ const PostSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
-    },
-    // is_verified_email: {
-    //     type: Boolean,
-    //     default: false
-    // }
+    }
 }, {
     timestamps: true
 });

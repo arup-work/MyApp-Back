@@ -7,6 +7,7 @@ import authMiddleware from '../middlewares/auth.middleware.js';
 const authRoute =  express.Router();
 
 authRoute.post('/register',[validationMiddleware(registerSchema)], AuthService.register);
+authRoute.get('/verify-email/:token',AuthService.verifyEmail);
 authRoute.post('/login', [validationMiddleware(loginSchema)],AuthService.login);
 authRoute.post('/change-password',[validationMiddleware(changePasswordSchema)], [authMiddleware], AuthService.changePassword);
 

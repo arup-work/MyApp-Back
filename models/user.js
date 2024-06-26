@@ -2,25 +2,35 @@ import mongoose from "mongoose";
 
 // Define a schema
 const userSchema = new mongoose.Schema({
-    name: {
-      type: String,
-      required: [true, 'Name is required'],
-    },
-    email: {
-      type: String,
-      required: [true, 'Email is required'],
-      unique: [true, 'Email is already used'],
-    },
-    password: {
-      type: String,
-      required : true
-    },
-    resetPasswordToken: {
-      type: String
-    },
-    resetPasswordExpires: {
-      type: Date
-    }
+  name: {
+    type: String,
+    required: [true, 'Name is required'],
+  },
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    unique: [true, 'Email is already used'],
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  resetPasswordToken: {
+    type: String
+  },
+  resetPasswordExpires: {
+    type: Date
+  },
+  isVerifiedEmail: {
+    type: Boolean,
+    default: false
+  },
+  verificationToken: {
+    type: String
+  },
+  verificationTokenExpire: {
+    type: Date
+  }
 });
 
 // Create an index on resetPasswordToken and resetPasswordExpires
