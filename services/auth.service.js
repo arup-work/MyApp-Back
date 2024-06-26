@@ -145,7 +145,8 @@ export default class AuthService {
             await user.save();
 
             return res.status(200).json({
-                message: "Email verify successfully!"
+                message: "Email verify successfully!",
+                user: { name : user.name, email : user.email}
             })
         } catch (error) {
             next(error);

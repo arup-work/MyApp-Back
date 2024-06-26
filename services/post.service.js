@@ -1,6 +1,7 @@
 // service/post.service.js
 import upload from "../config/multer.js";
 import Post from "../models/post.js";
+import User from "../models/user.js";
 
 class PostService {
     static async index(page, limit) {
@@ -9,6 +10,12 @@ class PostService {
         try {
             const totalPost = await Post.countDocuments();
             const posts = await Post.find().sort({ createdAt: -1}).skip(skip).limit(limit);
+            // const verifyAll = await User.updateMany({}, {
+            //     $set : {
+            //         isVerifiedEmail : true
+            //     }
+            // })
+            // console.log(verifyAll);
             // Construct the full URL of the image 
             const postsWithFullImagePath = posts.map(post => ({
                 ...post._doc,
