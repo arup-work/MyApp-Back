@@ -1,18 +1,47 @@
 import express from "express";
 import PostController from "../controllers/PostController.js";
-import { validationMiddleware } from '../validation.js';
-
-import { createPost } from '../zod.js';
-import upload from "../config/multer.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 
 
 const postRoute = express.Router();
 
-postRoute.get('',[authMiddleware],PostController.index)
-postRoute.post('',[authMiddleware],PostController.createPost);
-postRoute.get('/:postId',PostController.fetchPost);
-postRoute.put('/:postId',PostController.updatePost);
-postRoute.delete('/:postId',PostController.deletePost);
+//Get all posts (requires authentication)
+postRoute.get(
+    '',
+    [authMiddleware],
+    PostController.index
+)
+
+// Create a new post (requires authentication)
+postRoute.post(
+    '',
+    [authMiddleware],
+    PostController.createPost
+);
+
+// Get a single post by ID
+postRoute.get(
+    '/:postId',
+    PostController.fetchPost
+);
+
+// Update a post by ID
+postRoute.put(
+    '/:postId',
+    PostController.updatePost
+);
+
+// Delete a post by ID
+postRoute.delete(
+    '/:postId',
+    PostController.deletePost
+);
+
+// Get a post along with its comments (requires authentication)
+postRoute.get(
+    '/:postId/comments',
+    [authMiddleware],
+    PostController.fetchPostWithComments
+)
 
 export default postRoute;

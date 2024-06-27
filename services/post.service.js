@@ -1,5 +1,6 @@
 // service/post.service.js
 import upload from "../config/multer.js";
+import Comment from "../models/comment.js";
 import Post from "../models/post.js";
 import User from "../models/user.js";
 
@@ -135,6 +136,19 @@ class PostService {
             };
         } catch (error) {
             throw error;
+        }
+    }
+
+    static async fetchPostWithComments (postId){
+        try {
+            const [post, comments] = await Promise.all([
+                PostService.fetchPost(postId),
+                Comment.find({ postId })
+            ])
+
+            return {post, comments};
+        } catch (error) {
+            throw new Error(error.message);
         }
     }
 }

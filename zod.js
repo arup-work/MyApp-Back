@@ -35,3 +35,9 @@ export const createPost  = z.object({
     description : z.string().max(255).min(5),
 })
 
+// Schema for Comment add
+export const addComment = z.object({
+    comment : z.string().max(255).min(5)
+})
+
+

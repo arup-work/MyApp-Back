@@ -1,6 +1,17 @@
 import mongoose from "mongoose";
 import PostService from "../services/post.service.js";
 
+// Validate PostId
+const validatePostId = (res, postId) =>{
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+        res.status(400).json({
+            message: "Invalid post ID"
+        });
+        console.log(postId);
+        return true;
+    }
+    return false;
+}
 export default class PostController {
 
     static async index(req, res, next) {
@@ -74,6 +85,26 @@ export default class PostController {
             return res.status(result.status).json({
                 message: result.message,
                 post : result.post
+            })
+        } catch (error) {
+            return res.status(500).json({
+                message: error.message
+            })
+        }
+    }
+
+    static async fetchPostWithComments(req, res) {
+        const { postId } = req.params;
+        // Validate the postId
+        if (validatePostId(res, postId)) {
+            return;
+        }
+        try {
+            const result = await PostService.fetchPostWithComments(postId);
+            console.log(result);
+            return res.status(200).json({
+                message: "Comments fetch successfully",
+                post : result
             })
         } catch (error) {
             return res.status(500).json({

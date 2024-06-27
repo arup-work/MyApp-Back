@@ -1,6 +1,6 @@
 import express from 'express';
 import AuthService from '../services/auth.service.js';
-import { validationMiddleware } from '../validation.js';
+import { validationMiddleware } from '../middlewares/validation.js';
 import { registerSchema, loginSchema, changePasswordSchema, forgetPasswordSchema, resetPasswordSchema } from '../zod.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
 
