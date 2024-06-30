@@ -10,7 +10,7 @@ class PostService {
 
         try {
             const totalPost = await Post.countDocuments();
-            const posts = await Post.find().sort({ createdAt: -1}).skip(skip).limit(limit);
+            const posts = await Post.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
             // const verifyAll = await User.updateMany({}, {
             //     $set : {
             //         isVerifiedEmail : true
@@ -26,8 +26,8 @@ class PostService {
             return {
                 totalPost,
                 currentPage: page,
-                totalPage: Math.ceil(totalPost / limit), 
-                post : postsWithFullImagePath
+                totalPage: Math.ceil(totalPost / limit),
+                post: postsWithFullImagePath
             };
         } catch (error) {
             throw new Error(error.message);
@@ -64,7 +64,7 @@ class PostService {
         });
     }
 
-    static async updatePost(req, res){
+    static async updatePost(req, res) {
         const { postId } = req.params;
         return new Promise((resolve, reject) => {
             upload.single('file')(req, res, async (err) => {
@@ -76,7 +76,7 @@ class PostService {
                 const image = req.file ? req.file.path.replace(/\\/g, '/').replace('public/', '') : null;
 
                 try {
-                    const post =  await Post.findById(postId);
+                    const post = await Post.findById(postId);
                     if (!post) {
                         return reject({ status: 404, message: 'Post not found' });
                     }
@@ -99,8 +99,8 @@ class PostService {
                     if (imageUrl) {
                         updatedPost.image = imageUrl;
                     }
-                    
-                    resolve({ status: 200, message: "Post updated successfully", updatedPost})
+
+                    resolve({ status: 200, message: "Post updated successfully", updatedPost })
                 } catch (error) {
                     reject({ status: 500, message: error.message });
                 }
@@ -108,11 +108,11 @@ class PostService {
         })
     }
 
-    static async deletePost(postId){
+    static async deletePost(postId) {
         try {
             const post = await Post.findById(postId);
             if (!post) {
-               throw new Error("Post not found!")
+                throw new Error("Post not found!")
             }
             await post.deleteOne();
             return { status: 200, message: "Post deleted successfully", post };
@@ -125,13 +125,13 @@ class PostService {
         try {
             const post = await Post.findById(postId);
             if (!post) {
-               throw new Error("Post not found!")
+                throw new Error("Post not found!")
             }
             // Construct the full URL of the image 
             post.image = post.image ? `${process.env.BASE_URL}/uploads/${post.image}` : null;
 
             return {
-                message : "Post fetched succesfully",
+                message: "Post fetched succesfully",
                 post
             };
         } catch (error) {
@@ -139,16 +139,44 @@ class PostService {
         }
     }
 
-    static async fetchPostWithComments (postId){
+    static async fetchPostWithComments(postId) {
         try {
-            const [post, comments] = await Promise.all([
-                PostService.fetchPost(postId),
-                Comment.find({ postId })
-            ])
+            const post = await PostService.fetchPost(postId);
+            const comments = await Comment.find({ postId }).populate('userId','name');
 
-            return {post, comments};
+            // Convert comment to include user name directly
+            const commentsWithUserName = comments.map(comment => ({
+                ...comment._doc,
+                userName: comment.userId.name
+            }));
+
+            return { post, comments : commentsWithUserName };
         } catch (error) {
             throw new Error(error.message);
+        }
+    }
+
+    static async incrementViewCount(postId) {
+        try {
+            const post = await Post.findById(postId);
+            post.viewCount += 1;
+            await post.save();
+
+            return PostService.formatViewCount(post.viewCount);
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+
+    static formatViewCount(count) {
+        if (count >= 1000000000) {
+            return (count / 1000000000).toFixed(1) + 'B';
+        } else if (count >= 1000000) {
+            return (count / 1000000).toFixed(1) + 'M';
+        } else if (count >= 1000) {
+            return (count / 1000).toFixed(1) + 'k';
+        } else {
+            return count.toString();
         }
     }
 }

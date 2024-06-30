@@ -103,9 +103,31 @@ export default class PostController {
             const result = await PostService.fetchPostWithComments(postId);
             console.log(result);
             return res.status(200).json({
-                message: "Comments fetch successfully",
-                post : result
+                message: "Comments fetched successfully",
+                post: result.post,
+                comments: result.comments
             })
+        } catch (error) {
+            return res.status(500).json({
+                message: error.message
+            })
+        }
+    }
+
+    static async incrementViewCount(req, res) {
+        const { postId } = req.params;
+        // Validate the postId
+        if (validatePostId(res, postId)) {
+            return;
+        }
+
+        try {
+            const formattedDate = await PostService.incrementViewCount(postId);
+            return res.status(200).json({
+                message: "View count increment successfully",
+                viewCount: formattedDate
+            });
+
         } catch (error) {
             return res.status(500).json({
                 message: error.message

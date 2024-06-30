@@ -44,4 +44,11 @@ postRoute.get(
     PostController.fetchPostWithComments
 )
 
+// Increment the view count for a specific post
+postRoute.get(
+    '/:postId/increment-view',
+    [authMiddleware],
+    PostController.incrementViewCount
+)
+
 export default postRoute;
