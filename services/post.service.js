@@ -142,11 +142,18 @@ class PostService {
     static async fetchPostWithComments(postId) {
         try {
             const post = await PostService.fetchPost(postId);
+            /**
+             *.populate('userId', 'name'): The populate method replaces the userId field in each comment with the corresponding user document from the User collection. The second argument, 'name', specifies that only the name field of the user should be included in the populated document.
+             */
             const comments = await Comment.find({ postId }).populate('userId','name');
+
 
             // Convert comment to include user name directly
             const commentsWithUserName = comments.map(comment => ({
-                ...comment._doc,
+                /**
+                 * The ... syntax (spread operator) is used to create a new object that contains all the properties of the original comment document (comment._doc holds the original comment data).
+                 */
+                ...comment._doc, 
                 userName: comment.userId.name
             }));
 

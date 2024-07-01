@@ -101,7 +101,6 @@ export default class PostController {
         }
         try {
             const result = await PostService.fetchPostWithComments(postId);
-            console.log(result);
             return res.status(200).json({
                 message: "Comments fetched successfully",
                 post: result.post,
