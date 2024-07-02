@@ -7,8 +7,9 @@ export default class CommentService {
         try {
             const [post, comments] = await Promise.all([
                 PostService.fetchPost(postId),
-                Comment.find({ postId })
+                Comment.find({ postId }).sort({ createdAt: -1 })
             ])
+            console.log(comments);
             return {post, comments};
         } catch (error) {
             throw new Error(error.message);

@@ -95,6 +95,8 @@ export default class PostController {
 
     static async fetchPostWithComments(req, res) {
         const { postId } = req.params;
+				const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
         // Validate the postId
         if (validatePostId(res, postId)) {
             return;
