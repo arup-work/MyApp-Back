@@ -15,7 +15,7 @@ export default class CommentService {
             throw new Error(error.message);
         }
     }
-    static async addPost(user, comment, postId){
+    static async addComment(user, comment, postId){
         try {
             const newComment = Comment.create({
                 comment,
@@ -27,5 +27,14 @@ export default class CommentService {
             throw new Error(error.message);
         }
        
+    }
+
+    static async fetchPost(commentId){
+        try {
+            const comment = await Comment.findById(commentId);
+            return comment;
+        } catch (error) {
+            throw new Error(error.message);
+        }
     }
 }

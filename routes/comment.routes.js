@@ -6,15 +6,24 @@ import CommentController from "../controllers/CommentController.js";
 
 const commentRoute = express.Router();
 
-commentRoute.get(
-    '/:postId',
-    [authMiddleware],
-    CommentController.index
-)
+// commentRoute.get(
+//     '/:postId',
+//     [authMiddleware],
+//     CommentController.index
+// )
+
+// Create a new comment (requires authentication)
 commentRoute.post(
     '/:postId',
     [authMiddleware, validationMiddleware(addComment)],
-    CommentController.addPost
+    CommentController.addComment
+);
+
+// Get a single comment by Id (requires authentication)
+commentRoute.get(
+    '/:commentId',
+    [authMiddleware],
+    CommentController.fetchComment
 );
 
 export default commentRoute;

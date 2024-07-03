@@ -11,6 +11,18 @@ const validatePostId = (res, postId) =>{
     }
     return false;
 }
+
+// Validate CommentId
+const validateCommentId = (res, commentId) =>{
+    if (!mongoose.Types.ObjectId.isValid(commentId)) {
+        res.status(400).json({
+            message: "Invalid comment ID"
+        });
+        return true;
+    }
+    return false;
+}
+
 export default class CommentController{
     static async index(req, res) {
         const { postId } = req.params;
@@ -31,7 +43,7 @@ export default class CommentController{
             })
         }
     }
-    static async addPost(req, res) {
+    static async addComment(req, res) {
         const { user, body: { comment }, params: {postId} } = req;
 
         // Validate the postId
@@ -48,6 +60,24 @@ export default class CommentController{
             return res.status(500).json({
                 message: error.message
             });
+        }
+    }
+
+    static async fetchComment(req, res) {
+        const{ params: {commentId}} = req;
+         // Validate the commentId
+         if (validateCommentId(res, commentId)) {
+            return;
+        }
+        try {
+            const result = await CommentService.fetchPost(commentId);
+            res.status(200).json({
+                message: "Comment fetch successfully",
+                comment: result
+            })
+            
+        } catch (error) {
+            
         }
     }
 }
