@@ -11,9 +11,9 @@ class PostService {
         try {
             const totalPost = await Post.countDocuments();
             const posts = await Post.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
-            // const verifyAll = await User.updateMany({}, {
+            // const verifyAll = await Post.updateMany({}, {
             //     $set : {
-            //         isVerifiedEmail : true
+            //         userId : '66770af698d2aad949d0f3e6'
             //     }
             // })
             // console.log(verifyAll);
@@ -145,7 +145,7 @@ class PostService {
             /**
              *.populate('userId', 'name'): The populate method replaces the userId field in each comment with the corresponding user document from the User collection. The second argument, 'name', specifies that only the name field of the user should be included in the populated document.
              */
-            const comments = await Comment.find({ postId }).populate('userId','name');
+            const comments = await Comment.find({ postId }).sort({ createdAt: -1 }).populate('userId','name');
 
 
             // Convert comment to include user name directly
