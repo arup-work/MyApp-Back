@@ -80,4 +80,27 @@ export default class CommentController{
             
         }
     }
+
+    static async updateComment(req, res) {
+        const { user, body: {comment},params: { commentId} } = req;
+        // Validate the commentId
+        if (validateCommentId(res, commentId)) {
+            return;
+        }
+        try {
+            const updatedComment  = await CommentService.updateComment(user, comment, commentId);
+            return res.status(200).json({
+                message: "Comment Update successfully",
+                comment: updatedComment
+            });
+        } catch (error) {
+            if (error.message === "Comment not found") {
+                return res.status(404).json({ message: error.message });
+            } 
+            if (error.message === "Unauthorized action") {
+                return res.status(403).json({ message: error.message });                
+            }
+            return res.status(500).json({ message: error.message });
+        }
+    }
 }

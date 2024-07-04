@@ -25,5 +25,11 @@ commentRoute.get(
     [authMiddleware],
     CommentController.fetchComment
 );
+// Update a single comment by Id (requires authentication)
+commentRoute.put(
+    '/:commentId',
+    [authMiddleware],
+    CommentController.updateComment
+);
 
 export default commentRoute;

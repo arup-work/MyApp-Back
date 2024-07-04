@@ -37,4 +37,21 @@ export default class CommentService {
             throw new Error(error.message);
         }
     }
+
+    static async updateComment(user, comment, commentId){
+        try {
+            const commentDetails = await Comment.findById(commentId);
+            if (!comment) {
+                throw new Error("Comment not found");
+            }
+            if (commentDetails.userId.toString() !== user.id) {
+                throw new Error("Unauthorized action"); 
+            }
+            commentDetails.comment = comment;
+            await commentDetails.save();
+            return commentDetails;
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
 }
