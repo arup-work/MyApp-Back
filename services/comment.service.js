@@ -41,7 +41,7 @@ export default class CommentService {
     static async updateComment(user, comment, commentId){
         try {
             const commentDetails = await Comment.findById(commentId);
-            if (!comment) {
+            if (!commentDetails) {
                 throw new Error("Comment not found");
             }
             if (commentDetails.userId.toString() !== user.id) {
@@ -49,6 +49,22 @@ export default class CommentService {
             }
             commentDetails.comment = comment;
             await commentDetails.save();
+            return commentDetails;
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+
+    static async deleteComment(user, commentId){
+        try {
+            const commentDetails = await Comment.findById(commentId);
+            if (!commentDetails) {
+                throw new Error("Comment not found");
+            }
+            if (commentDetails.userId.toString() !== user.id) {
+                throw new Error("Unauthorized action"); 
+            }
+            await commentDetails.deleteOne();
             return commentDetails;
         } catch (error) {
             throw new Error(error.message);

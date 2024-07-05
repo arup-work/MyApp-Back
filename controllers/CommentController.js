@@ -51,7 +51,7 @@ export default class CommentController{
             return;
         }
         try {
-            const result = await CommentService.addPost(user, comment, postId)
+            const result = await CommentService.addComment(user, comment, postId)
             res.status(200).json({
                 message: "Comment added successfully",
                 comment: result
@@ -102,5 +102,29 @@ export default class CommentController{
             }
             return res.status(500).json({ message: error.message });
         }
+    }
+
+    static async deleteComment(req, res){
+        const { user, params: { commentId} } = req;
+        // Validate the commentId
+        if (validateCommentId(res, commentId)) {
+            return;
+        }
+        try {
+            const deletedComment  = await CommentService.deleteComment(user, commentId);
+            return res.status(200).json({
+                message: "Comment Deleted successfully",
+                comment: deletedComment
+            });
+        } catch (error) {
+            if (error.message === "Comment not found") {
+                return res.status(404).json({ message: error.message });
+            } 
+            if (error.message === "Unauthorized action") {
+                return res.status(403).json({ message: error.message });                
+            }
+            return res.status(500).json({ message: error.message });
+        }
+
     }
 }

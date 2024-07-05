@@ -31,5 +31,11 @@ commentRoute.put(
     [authMiddleware],
     CommentController.updateComment
 );
+// Delete a single comment by Id (requires authentication)
+commentRoute.delete(
+    '/:commentId',
+    [authMiddleware],
+    CommentController.deleteComment
+);
 
 export default commentRoute;
