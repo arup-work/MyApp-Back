@@ -127,12 +127,19 @@ class PostService {
             if (!post) {
                 throw new Error("Post not found!")
             }
+
             // Construct the full URL of the image 
             post.image = post.image ? `${process.env.BASE_URL}/uploads/${post.image}` : null;
 
+            const postWithUser = await post.populate('userId','name');
+            const postWithUserName = {
+                ...postWithUser._doc,
+                userName: postWithUser.userId.name
+            }
+            
             return {
                 message: "Post fetched succesfully",
-                post
+                post : postWithUserName
             };
         } catch (error) {
             throw error;

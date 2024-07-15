@@ -9,7 +9,6 @@ export default class CommentService {
                 PostService.fetchPost(postId),
                 Comment.find({ postId }).sort({ createdAt: -1 })
             ])
-            console.log(comments);
             return {post, comments};
         } catch (error) {
             throw new Error(error.message);
@@ -17,12 +16,18 @@ export default class CommentService {
     }
     static async addComment(user, comment, postId){
         try {
-            const newComment = Comment.create({
+            const newComment = await Comment.create({
                 comment,
                 userId: user.id,
                 postId
             });
-            return newComment;
+            // Populate the userId field 
+            const commentWithUser = await Comment.findById(newComment._id).populate('userId','name');
+            const commentWithUserName = {
+                ...commentWithUser._doc,
+                userName: commentWithUser.userId.name
+            };
+            return commentWithUserName;
         } catch (error) {
             throw new Error(error.message);
         }
