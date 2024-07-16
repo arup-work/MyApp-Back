@@ -146,13 +146,17 @@ class PostService {
         }
     }
 
-    static async fetchPostWithComments(postId) {
+    static async fetchPostWithComments(postId, page, limit) {
+        const skip = (page - 1) * limit;
+
         try {
-            const post = await PostService.fetchPost(postId);
+            const { post } = await PostService.fetchPost(postId);
+            
+            const totalComments = await Comment.find({ postId }).countDocuments();
             /**
              *.populate('userId', 'name'): The populate method replaces the userId field in each comment with the corresponding user document from the User collection. The second argument, 'name', specifies that only the name field of the user should be included in the populated document.
              */
-            const comments = await Comment.find({ postId }).sort({ createdAt: -1 }).populate('userId','name');
+            const comments = await Comment.find({ postId }).sort({ createdAt: -1 }).populate('userId','name').skip(skip).limit(limit);
 
 
             // Convert comment to include user name directly
@@ -164,7 +168,13 @@ class PostService {
                 userName: comment.userId.name
             }));
 
-            return { post, comments : commentsWithUserName };
+            return { 
+                post, 
+                comments : commentsWithUserName,
+                totalComments, 
+                currentPage: page,
+                totalPage: Math.ceil(totalComments / limit)
+            };
         } catch (error) {
             throw new Error(error.message);
         }
