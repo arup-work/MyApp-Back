@@ -17,6 +17,17 @@ class PostService {
             //     }
             // })
             // console.log(verifyAll);
+
+            // const posts1 = await Post.find({ modifiedAt: { $exists: true } });
+
+            // const updatePromises = posts1.map(post => {
+            //     post.modifiedAt = post.createdAt;
+            //     return post.save();
+            // });
+    
+            // await Promise.all(updatePromises);
+            // console.log('All posts updated successfully');
+            
             // Construct the full URL of the image 
             const postsWithFullImagePath = posts.map(post => ({
                 ...post._doc,
