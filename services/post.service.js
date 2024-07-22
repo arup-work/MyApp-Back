@@ -131,32 +131,59 @@ class PostService {
             // Construct the full URL of the image 
             post.image = post.image ? `${process.env.BASE_URL}/uploads/${post.image}` : null;
 
-            const postWithUser = await post.populate('userId','name');
+            const postWithUser = await post.populate('userId', 'name');
             const postWithUserName = {
                 ...postWithUser._doc,
                 userName: postWithUser.userId.name
             }
-            
+
             return {
                 message: "Post fetched succesfully",
-                post : postWithUserName
+                post: postWithUserName
             };
         } catch (error) {
             throw error;
         }
     }
 
-    static async fetchPostWithComments(postId, page, limit) {
+    static async fetchPostWithComments(postId, page, limit, searchKey) {
         const skip = (page - 1) * limit;
 
         try {
             const { post } = await PostService.fetchPost(postId);
-            
-            const totalComments = await Comment.find({ postId }).countDocuments();
+
+            // Build the search query
+            const searchQuery = { postId };
+            if (searchKey) {
+                searchQuery.comment = { $regex: searchKey, $options: 'i' }; // Case-insensitive search
+            }
+
+            const totalComments = await Comment.countDocuments(searchQuery);
+            const totalPages = Math.ceil(totalComments / limit);
+
+            // If there are no matching comments, return an empty array and appropriate metadata
+            if (totalComments === 0) {
+                return {
+                    post,
+                    comments: [],
+                    totalComments,
+                    currentPage: 1,
+                    totalPages: 1
+                };
+            }
+
+            // If the requested page is greater than totalPages, reset to last page
+            const currentPage = page > totalPages ? totalPages : page;
+            const adjustedSkip = (currentPage - 1) * limit;
+
             /**
              *.populate('userId', 'name'): The populate method replaces the userId field in each comment with the corresponding user document from the User collection. The second argument, 'name', specifies that only the name field of the user should be included in the populated document.
              */
-            const comments = await Comment.find({ postId }).sort({ createdAt: -1 }).populate('userId','name').skip(skip).limit(limit);
+            const comments = await Comment.find(searchQuery)
+                .sort({ createdAt: -1 })
+                .populate('userId', 'name')
+                .skip(adjustedSkip)
+                .limit(limit);
 
 
             // Convert comment to include user name directly
@@ -164,14 +191,14 @@ class PostService {
                 /**
                  * The ... syntax (spread operator) is used to create a new object that contains all the properties of the original comment document (comment._doc holds the original comment data).
                  */
-                ...comment._doc, 
+                ...comment._doc,
                 userName: comment.userId.name
             }));
 
-            return { 
-                post, 
-                comments : commentsWithUserName,
-                totalComments, 
+            return {
+                post,
+                comments: commentsWithUserName,
+                totalComments,
                 currentPage: page,
                 totalPage: Math.ceil(totalComments / limit)
             };

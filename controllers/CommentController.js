@@ -51,11 +51,12 @@ export default class CommentController{
             return;
         }
         try {
-            const result = await CommentService.addComment(user, comment, postId)
+            const result = await CommentService.addComment(user, comment, postId);
             res.status(200).json({
                 message: "Comment added successfully",
-                comment: result
-            })
+                comment: result.commentWithUserName,
+                totalComments : result.totalComments
+             })
         } catch (error) {
             return res.status(500).json({
                 message: error.message

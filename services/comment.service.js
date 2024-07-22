@@ -27,7 +27,10 @@ export default class CommentService {
                 ...commentWithUser._doc,
                 userName: commentWithUser.userId.name
             };
-            return commentWithUserName;
+            // Total comments for this post
+            const totalComments = await Comment.countDocuments({ postId });
+
+            return {commentWithUserName , totalComments};
         } catch (error) {
             throw new Error(error.message);
         }
@@ -75,4 +78,5 @@ export default class CommentService {
             throw new Error(error.message);
         }
     }
+
 }

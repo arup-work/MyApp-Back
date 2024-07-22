@@ -97,12 +97,13 @@ export default class PostController {
         const { postId } = req.params;
 		const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 5;
+        const searchKey = req.query.search;
         // Validate the postId
         if (validatePostId(res, postId)) {
             return;
         }
         try {
-            const result = await PostService.fetchPostWithComments(postId, page, limit);
+            const result = await PostService.fetchPostWithComments(postId, page, limit, searchKey);
             return res.status(200).json({
                 message: "Comments fetched successfully",
                 data: result
