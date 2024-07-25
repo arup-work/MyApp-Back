@@ -59,7 +59,8 @@ class PostService {
                         title,
                         description,
                         image: imagePath,
-                        userId: req.user.id
+                        userId: req.user.id,
+                        modifiedAt: Date.now()
                     });
 
                     // Check if the file exists and construct the full URL
@@ -94,6 +95,8 @@ class PostService {
 
                     post.title = title;
                     post.description = description;
+                    post.modifiedAt = Date.now();
+
 
                     if (req.file) {
                         post.image = req.file.path.replace(/\\/g, '/').replace('public/', '');
