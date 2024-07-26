@@ -5,40 +5,61 @@ import Post from "../models/post.js";
 import User from "../models/user.js";
 
 class PostService {
-    static async index(page, limit) {
+    static async index(page, limit, searchKey) {
         const skip = (page - 1) * limit;
 
         try {
+            // Build the search query
+            const searchQuery = {};
+            if (searchKey) {
+                searchQuery.$or = [
+                    { title: { $regex: searchKey, $options: 'i' } }, // Case-insensitive search
+                    { description: { $regex: searchKey, $options: 'i' } }
+                ]
+            }
+
             const totalPost = await Post.countDocuments();
-            const posts = await Post.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
-            // const verifyAll = await Post.updateMany({}, {
-            //     $set : {
-            //         userId : '66770af698d2aad949d0f3e6'
-            //     }
-            // })
-            // console.log(verifyAll);
+            const totalSearchPost = await Post.countDocuments(searchQuery);
+            const totalPages = Math.ceil(totalSearchPost / limit);
 
-            // const posts1 = await Post.find({ modifiedAt: { $exists: true } });
+            // If there are no matching comments, return an empty array and appropriate metadata
+            if (totalSearchPost === 0) {
+                return {
+                    posts: [],
+                    totalSearchPost,
+                    totalPost,
+                    currentPage: 1,
+                    totalPages: 1
+                };
+            }
 
-            // const updatePromises = posts1.map(post => {
-            //     post.modifiedAt = post.createdAt;
-            //     return post.save();
-            // });
-    
-            // await Promise.all(updatePromises);
-            // console.log('All posts updated successfully');
-            
+            // If the requested page is greater than totalPages, reset to last page
+            const currentPage = page > totalPages ? totalPages : page;
+            const adjustedSkip = (currentPage - 1) * limit;
+
+            const posts = await Post
+                .find(searchQuery)
+                .sort({ createdAt: -1 })
+                .skip(adjustedSkip)
+                .limit(limit);
+
             // Construct the full URL of the image 
             const postsWithFullImagePath = posts.map(post => ({
                 ...post._doc,
                 image: post.image ? `${process.env.BASE_URL}/uploads/${post.image}` : null
             }));
 
+            // Calculate the starting and ending indices for the current page
+            const startEntry = adjustedSkip + 1;
+            const endEntry = Math.min(skip + limit, totalSearchPost);
+
+
             return {
                 totalPost,
                 currentPage: page,
-                totalPage: Math.ceil(totalPost / limit),
-                post: postsWithFullImagePath
+                totalPage: Math.ceil(totalSearchPost / limit),
+                post: postsWithFullImagePath,
+                message: `Showing ${startEntry} to ${endEntry} of ${totalPost} entries`
             };
         } catch (error) {
             throw new Error(error.message);
@@ -243,6 +264,25 @@ class PostService {
         } else {
             return count.toString();
         }
+    }
+
+    static async allPostUpdate() {
+        // const verifyAll = await Post.updateMany({}, {
+        //     $set : {
+        //         userId : '66770af698d2aad949d0f3e6'
+        //     }
+        // })
+        // console.log(verifyAll);
+
+        // const posts1 = await Post.find({ modifiedAt: { $exists: true } });
+
+        // const updatePromises = posts1.map(post => {
+        //     post.modifiedAt = post.createdAt;
+        //     return post.save();
+        // });
+
+        // await Promise.all(updatePromises);
+        // console.log('All posts updated successfully');
     }
 }
 

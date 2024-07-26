@@ -17,8 +17,9 @@ export default class PostController {
     static async index(req, res, next) {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
+        const searchKey = req.query.search;
         try {
-            const posts =  await PostService.index(page, limit);
+            const posts =  await PostService.index(page, limit, searchKey);
             return res.status(200).json({
                 message: '',
                 posts : posts
