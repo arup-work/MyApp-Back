@@ -266,6 +266,28 @@ class PostService {
         }
     }
 
+    static async addFavoritePost(postId, userId) {
+        try {
+            const user = await User.findById(userId);
+            const post = await Post.findById(postId);
+
+            if (!user) {
+                throw new Error('User not found');
+            } 
+            if (!post) {
+                throw new Error('Post not found');
+            }
+
+            if (!user.favoritePosts.includes(post._id)) {
+                user.favoritePosts.push(post._id);
+                await user.save();
+            }
+            return user;
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+
     static async allPostUpdate() {
         // const verifyAll = await Post.updateMany({}, {
         //     $set : {

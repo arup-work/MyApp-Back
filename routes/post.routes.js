@@ -51,4 +51,11 @@ postRoute.get(
     PostController.incrementViewCount
 )
 
+// Add favorite
+postRoute.post(
+    '/users/:userId/favorites/:postId',
+    [authMiddleware],
+    PostController.addFavoritePost
+)
+
 export default postRoute;

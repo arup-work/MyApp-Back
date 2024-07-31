@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 // Define a schema
 const userSchema = new mongoose.Schema({
@@ -30,7 +30,13 @@ const userSchema = new mongoose.Schema({
   },
   verificationTokenExpire: {
     type: Date
-  }
+  },
+  favoritePosts: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Post'
+    }
+  ]
 });
 
 // Create an index on resetPasswordToken and resetPasswordExpires

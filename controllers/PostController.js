@@ -136,5 +136,28 @@ export default class PostController {
             })
         }
     }
+
+    static async addFavoritePost(req, res){
+        const { postId, userId } = req.params;
+        // Validate the postId
+        if (validatePostId(res, postId)) {
+            return;
+        }
+        if (validatePostId(res, userId)) {
+            return;
+        }
+
+       try {
+            const result = await PostService.addFavoritePost(postId, userId);
+            return res.status(200).json({
+                message: "View count increment successfully",
+                result: result
+            });
+       } catch (error) {
+            return res.status(500).json({
+                message: error.message
+            })
+       }
+    }
 }
 
