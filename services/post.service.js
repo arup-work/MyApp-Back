@@ -183,19 +183,19 @@ class PostService {
 
     static async fetchPostWithComments(postId, page, limit, searchKey) {
         const skip = (page - 1) * limit;
-
+    
         try {
             const { post } = await PostService.fetchPost(postId);
-
+    
             // Build the search query
             const searchQuery = { postId };
             if (searchKey) {
                 searchQuery.comment = { $regex: searchKey, $options: 'i' }; // Case-insensitive search
             }
-
+    
             const totalComments = await Comment.countDocuments(searchQuery);
             const totalPages = Math.ceil(totalComments / limit);
-
+    
             // If there are no matching comments, return an empty array and appropriate metadata
             if (totalComments === 0) {
                 return {
@@ -206,41 +206,46 @@ class PostService {
                     totalPages: 1
                 };
             }
-
+    
             // If the requested page is greater than totalPages, reset to last page
             const currentPage = page > totalPages ? totalPages : page;
             const adjustedSkip = (currentPage - 1) * limit;
-
-            /**
-             *.populate('userId', 'name'): The populate method replaces the userId field in each comment with the corresponding user document from the User collection. The second argument, 'name', specifies that only the name field of the user should be included in the populated document.
-             */
+    
             const comments = await Comment.find(searchQuery)
                 .sort({ createdAt: -1 })
                 .populate('userId', 'name')
                 .skip(adjustedSkip)
-                .limit(limit);
-
-
-            // Convert comment to include user name directly
-            const commentsWithUserName = comments.map(comment => ({
-                /**
-                 * The ... syntax (spread operator) is used to create a new object that contains all the properties of the original comment document (comment._doc holds the original comment data).
-                 */
-                ...comment._doc,
-                userName: comment.userId.name
-            }));
-
+                .limit(limit)
+                .lean(); // Use lean() for plain JavaScript objects
+    
+            // Build a nested structure
+            const commentMap = new Map();
+            comments.forEach(comment => {
+                commentMap.set(comment._id.toString(), { ...comment, children: [] });
+            });
+    
+            const nestedComments = [];
+            comments.forEach(comment => {
+                if (comment.parentCommentId) {
+                    const parent = commentMap.get(comment.parentCommentId.toString());
+                    parent.children.push(commentMap.get(comment._id.toString()));
+                } else {
+                    nestedComments.push(commentMap.get(comment._id.toString()));
+                }
+            });
+    
             return {
                 post,
-                comments: commentsWithUserName,
+                comments: nestedComments,
                 totalComments,
                 currentPage: page,
-                totalPage: Math.ceil(totalComments / limit)
+                totalPages: Math.ceil(totalComments / limit)
             };
         } catch (error) {
             throw new Error(error.message);
         }
     }
+    
 
     static async incrementViewCount(postId) {
         try {

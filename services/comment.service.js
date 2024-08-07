@@ -14,12 +14,13 @@ export default class CommentService {
             throw new Error(error.message);
         }
     }
-    static async addComment(user, comment, postId){
+    static async addComment(user, comment, postId, parentCommentId){
         try {
             const newComment = await Comment.create({
                 comment,
                 userId: user.id,
-                postId
+                postId,
+                parentCommentId: parentCommentId || null
             });
             // Populate the userId field 
             const commentWithUser = await Comment.findById(newComment._id).populate('userId','name');

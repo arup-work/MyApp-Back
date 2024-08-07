@@ -44,14 +44,14 @@ export default class CommentController{
         }
     }
     static async addComment(req, res) {
-        const { user, body: { comment }, params: {postId} } = req;
+        const { user, body: { comment, parentCommentId }, params: {postId} } = req;
 
         // Validate the postId
         if (validatePostId(res, postId)) {
             return;
         }
         try {
-            const result = await CommentService.addComment(user, comment, postId);
+            const result = await CommentService.addComment(user, comment, postId , parentCommentId);
             res.status(200).json({
                 message: "Comment added successfully",
                 comment: result.commentWithUserName,
