@@ -71,7 +71,7 @@ export default class CommentController{
             return;
         }
         try {
-            const result = await CommentService.fetchPost(commentId);
+            const result = await CommentService.fetchComment(commentId);
             res.status(200).json({
                 message: "Comment fetch successfully",
                 comment: result

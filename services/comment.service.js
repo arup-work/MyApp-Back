@@ -38,10 +38,21 @@ export default class CommentService {
        
     }
 
-    static async fetchPost(commentId){
+    static async fetchComment(commentId){
         try {
-            const comment = await Comment.findById(commentId);
-            return comment;
+            const comment = await Comment.findById(commentId).populate('userId','name');
+
+            if (!comment) {
+                throw new Error('Comment not found!');
+            }
+
+            // Fetch the nested comments for the main comment
+            const nestedComments = await this.getChildren(commentId);
+
+            return {
+                ...comment._doc,
+                children: nestedComments
+            };
         } catch (error) {
             throw new Error(error.message);
         }
@@ -78,6 +89,17 @@ export default class CommentService {
         } catch (error) {
             throw new Error(error.message);
         }
+    }
+
+     // Fetch children recursively
+     static async getChildren(parentId){
+        const children = await Comment
+                                .find({ parentCommentId: parentId})
+                                .populate('userId', 'name');
+        return Promise.all(children.map(async (child) => ({
+            ...child._doc,
+            children: await this.getChildren(child._id) // Recursive call to fetch nested children
+        })))
     }
 
 }
