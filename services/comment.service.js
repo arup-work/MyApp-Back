@@ -98,6 +98,7 @@ export default class CommentService {
                                 .populate('userId', 'name');
         return Promise.all(children.map(async (child) => ({
             ...child._doc,
+            userName: child.userId.name,
             children: await this.getChildren(child._id) // Recursive call to fetch nested children
         })))
     }
