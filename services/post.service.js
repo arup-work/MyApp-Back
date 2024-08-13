@@ -183,46 +183,46 @@ class PostService {
 
     static async fetchPostWithComments(postId, page, limit, searchKey) {
         const skip = (page - 1) * limit;
-
+    
         try {
             const { post } = await PostService.fetchPost(postId);
-
+    
             // Build the search query
-            const searchQuery = { postId };
+            const searchQuery = { postId, parentCommentId: null }; // Focus on root comments
             if (searchKey) {
                 searchQuery.comment = { $regex: searchKey, $options: 'i' }; // Case-insensitive search
             }
-
-            const totalComments = await Comment.countDocuments(searchQuery);
-            const totalPages = Math.ceil(totalComments / limit);
-
+    
+            // Count total root comments
+            const totalRootComments = await Comment.countDocuments(searchQuery);
+            const totalPages = Math.ceil(totalRootComments / limit);
+    
             // If there are no matching comments, return an empty array and appropriate metadata
-            if (totalComments === 0) {
-                const comments = [];
-                comments.childrenCount = 0;
+            if (totalRootComments === 0) {
                 return {
                     post,
                     comments: [],
-                    totalComments,
+                    totalComments: totalRootComments,
                     currentPage: 1,
                     totalPages: 1
                 };
             }
-
+    
             // If the requested page is greater than totalPages, reset to last page
             const currentPage = page > totalPages ? totalPages : page;
             const adjustedSkip = (currentPage - 1) * limit;
-
-            const comments = await Comment.find(searchQuery)
+    
+            // Fetch root comments
+            const rootComments = await Comment.find(searchQuery)
                 .sort({ createdAt: -1 })
                 .populate('userId', 'name')
                 .skip(adjustedSkip)
                 .limit(limit)
                 .lean(); // Use lean() for plain JavaScript objects
-
+    
             // Build a nested structure
             const commentMap = new Map();
-            comments.forEach(comment => {
+            rootComments.forEach(comment => {
                 // Initialize the comment in the map with an empty children array and count set to 0
                 commentMap.set(comment._id.toString(), {
                     ...comment,
@@ -230,33 +230,28 @@ class PostService {
                     childrenCount: 0
                 });
             });
-
-            const nestedComments = [];
-            comments.forEach(comment => {
-                if (comment.parentCommentId) {
-                    // Find the parent component
-                    const parent = commentMap.get(comment.parentCommentId.toString());
-
-                    // Increment the parent's child count
-                    if (parent) {
-                        parent.childrenCount += 1;
-                    }
-                } else {
-                    nestedComments.push(commentMap.get(comment._id.toString()));
-                }
-            });
-
+    
+            // Count children for each root comment
+            await Promise.all(rootComments.map(async (rootComment) => {
+                const childrenCount = await Comment.countDocuments({ parentCommentId: rootComment._id });
+                commentMap.get(rootComment._id.toString()).childrenCount = childrenCount;
+            }));
+    
+            const nestedComments = Array.from(commentMap.values());
+    
             return {
                 post,
                 comments: nestedComments,
-                totalComments,
+                totalComments: totalRootComments,
                 currentPage: page,
-                totalPages: Math.ceil(totalComments / limit)
+                totalPages: Math.ceil(totalRootComments / limit)
             };
         } catch (error) {
             throw new Error(error.message);
         }
     }
+    
+    
 
 
     static async incrementViewCount(postId) {
