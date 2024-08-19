@@ -95,6 +95,7 @@ export default class CommentService {
      static async getChildren(parentId){
         const children = await Comment
                                 .find({ parentCommentId: parentId})
+                                .sort({ createdAt: -1 })
                                 .populate('userId', 'name');
         return Promise.all(children.map(async (child) => ({
             ...child._doc,

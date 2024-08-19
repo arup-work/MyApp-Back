@@ -188,11 +188,13 @@ class PostService {
             const { post } = await PostService.fetchPost(postId);
     
             // Build the search query
-            const searchQuery = { postId, parentCommentId: null }; // Focus on root comments
+            const searchQuery = { postId }; // Focus on root comments
             if (searchKey) {
                 searchQuery.comment = { $regex: searchKey, $options: 'i' }; // Case-insensitive search
             }
     
+            const totalComments = await Comment.countDocuments(searchQuery);
+            searchQuery.parentCommentId = null;
             // Count total root comments
             const totalRootComments = await Comment.countDocuments(searchQuery);
             const totalPages = Math.ceil(totalRootComments / limit);
@@ -242,7 +244,7 @@ class PostService {
             return {
                 post,
                 comments: nestedComments,
-                totalComments: totalRootComments,
+                totalComments: totalComments,
                 currentPage: page,
                 totalPages: Math.ceil(totalRootComments / limit)
             };

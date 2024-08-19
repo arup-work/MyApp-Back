@@ -44,7 +44,6 @@ export default class CommentController{
         }
     }
     static async addComment(req, res) {
-        console.log("here");
         const { user, body: { comment, parentCommentId }, params: {postId} } = req;
 
         // Validate the postId
