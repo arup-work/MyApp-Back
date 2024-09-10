@@ -67,9 +67,13 @@ export default class CommentService {
             if (commentDetails.userId.toString() !== user.id) {
                 throw new Error("Unauthorized action"); 
             }
+
+            // Find the topmost parent comment ID
+            const topMostParentCommentId = await this.getTopmostParentCommentId(commentDetails);
+
             commentDetails.comment = comment;
             await commentDetails.save();
-            return commentDetails;
+            return {commentDetails, topMostParentCommentId};
         } catch (error) {
             throw new Error(error.message);
         }
@@ -84,8 +88,13 @@ export default class CommentService {
             if (commentDetails.userId.toString() !== user.id) {
                 throw new Error("Unauthorized action"); 
             }
+            // Fetch and delete nested comments recursively
+            let deletedCount = await this.deleteNestedComments(commentId);
+
             await commentDetails.deleteOne();
-            return commentDetails;
+            deletedCount += 1;
+
+            return {commentDetails, deletedCount};
         } catch (error) {
             throw new Error(error.message);
         }
@@ -103,5 +112,29 @@ export default class CommentService {
             children: await this.getChildren(child._id) // Recursive call to fetch nested children
         })))
     }
+
+    // Recursively delete nested comments
+    static async deleteNestedComments(parentId){
+        const children = await Comment.find({parentCommentId: parentId});
+        let deletedCount = 0;
+        for (const child of children) {
+            // Recursively delete children comment
+            deletedCount += await this.deleteNestedComments(child._id);
+            // Delete the child comment itself
+            await Comment.deleteOne({ _id: child._id })
+            deletedCount += 1;
+        }
+        return deletedCount;
+    }
+
+    // Find the topmost parent comment ID
+    static async getTopmostParentCommentId(commentDetails){
+        let currentComment = commentDetails;
+        while (currentComment.parentCommentId) {
+            currentComment = await Comment.findById(currentComment.parentCommentId);
+        }
+        return currentComment._id; //Topmost comment's id
+    }
+
 
 }

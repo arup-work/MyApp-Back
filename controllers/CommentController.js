@@ -89,10 +89,11 @@ export default class CommentController{
             return;
         }
         try {
-            const updatedComment  = await CommentService.updateComment(user, comment, commentId);
+            const {commentDetails, topMostParentCommentId}  = await CommentService.updateComment(user, comment, commentId);
             return res.status(200).json({
                 message: "Comment Update successfully",
-                comment: updatedComment
+                comment: commentDetails,
+                topMostParentCommentId
             });
         } catch (error) {
             if (error.message === "Comment not found") {
@@ -112,10 +113,11 @@ export default class CommentController{
             return;
         }
         try {
-            const deletedComment  = await CommentService.deleteComment(user, commentId);
+            const {commentDetails, deletedCount}  = await CommentService.deleteComment(user, commentId);
             return res.status(200).json({
                 message: "Comment Deleted successfully",
-                comment: deletedComment
+                comment: commentDetails,
+                deletedCommentCount: deletedCount
             });
         } catch (error) {
             if (error.message === "Comment not found") {
