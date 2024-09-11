@@ -130,4 +130,21 @@ export default class CommentController{
         }
 
     }
+
+    static async likeComment(req,res){
+        const { user, params: { commentId} } = req;
+        // Validate the commentId
+        if (validateCommentId(res, commentId)) {
+            return;
+        }
+        try {
+            const {comment , isLike} = await CommentService.likeComment(user, commentId);
+            return res.status(200).json({
+                message: `${isLike ? 'Thank you!' : ''}`,
+                comment
+            })
+        } catch (error) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
 }

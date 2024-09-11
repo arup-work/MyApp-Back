@@ -37,5 +37,11 @@ commentRoute.delete(
     [authMiddleware],
     CommentController.deleteComment
 );
+// Like a comment
+commentRoute.post(
+    '/:commentId/likes',
+    [authMiddleware],
+    CommentController.likeComment
+)
 
 export default commentRoute;

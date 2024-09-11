@@ -3,18 +3,18 @@ import Post from "../models/post.js";
 import PostService from "./post.service.js";
 
 export default class CommentService {
-    static async index(postId){
+    static async index(postId) {
         try {
             const [post, comments] = await Promise.all([
                 PostService.fetchPost(postId),
                 Comment.find({ postId }).sort({ createdAt: -1 })
             ])
-            return {post, comments};
+            return { post, comments };
         } catch (error) {
             throw new Error(error.message);
         }
     }
-    static async addComment(user, comment, postId, parentCommentId){
+    static async addComment(user, comment, postId, parentCommentId) {
         try {
             const newComment = await Comment.create({
                 comment,
@@ -23,7 +23,7 @@ export default class CommentService {
                 parentCommentId: parentCommentId || null
             });
             // Populate the userId field 
-            const commentWithUser = await Comment.findById(newComment._id).populate('userId','name');
+            const commentWithUser = await Comment.findById(newComment._id).populate('userId', 'name');
             const commentWithUserName = {
                 ...commentWithUser._doc,
                 userName: commentWithUser.userId.name
@@ -31,16 +31,16 @@ export default class CommentService {
             // Total comments for this post
             const totalComments = await Comment.countDocuments({ postId });
 
-            return {commentWithUserName , totalComments};
+            return { commentWithUserName, totalComments };
         } catch (error) {
             throw new Error(error.message);
         }
-       
+
     }
 
-    static async fetchComment(commentId){
+    static async fetchComment(commentId) {
         try {
-            const comment = await Comment.findById(commentId).populate('userId','name');
+            const comment = await Comment.findById(commentId).populate('userId', 'name');
 
             if (!comment) {
                 throw new Error('Comment not found!');
@@ -58,14 +58,14 @@ export default class CommentService {
         }
     }
 
-    static async updateComment(user, comment, commentId){
+    static async updateComment(user, comment, commentId) {
         try {
             const commentDetails = await Comment.findById(commentId);
             if (!commentDetails) {
                 throw new Error("Comment not found");
             }
             if (commentDetails.userId.toString() !== user.id) {
-                throw new Error("Unauthorized action"); 
+                throw new Error("Unauthorized action");
             }
 
             // Find the topmost parent comment ID
@@ -73,20 +73,20 @@ export default class CommentService {
 
             commentDetails.comment = comment;
             await commentDetails.save();
-            return {commentDetails, topMostParentCommentId};
+            return { commentDetails, topMostParentCommentId };
         } catch (error) {
             throw new Error(error.message);
         }
     }
 
-    static async deleteComment(user, commentId){
+    static async deleteComment(user, commentId) {
         try {
             const commentDetails = await Comment.findById(commentId);
             if (!commentDetails) {
                 throw new Error("Comment not found");
             }
             if (commentDetails.userId.toString() !== user.id) {
-                throw new Error("Unauthorized action"); 
+                throw new Error("Unauthorized action");
             }
             // Fetch and delete nested comments recursively
             let deletedCount = await this.deleteNestedComments(commentId);
@@ -94,18 +94,58 @@ export default class CommentService {
             await commentDetails.deleteOne();
             deletedCount += 1;
 
-            return {commentDetails, deletedCount};
+            return { commentDetails, deletedCount };
         } catch (error) {
             throw new Error(error.message);
         }
     }
 
-     // Fetch children recursively
-     static async getChildren(parentId){
+    // Like comment
+    static async likeComment(user, commentId) {
+        const comment = await Comment.findById(commentId);
+        if (!comment) {
+            throw new Error("Comment not found");
+        }
+
+        // Check if the user is already liked the comment
+        if (comment.likes.includes(user.id)) {
+            // Remove userId from the likes array
+            comment.likes = comment.likes.filter(id => id.toString() !== user.id.toString());
+            await comment.save();
+            return { comment, isLike: false}
+        }
+
+        // Add userId to the likes array
+        comment.likes.push(user.id);
+        await comment.save();
+
+        return { comment, isLike: true}
+    }
+
+    // Total like comment
+    static async getComment(commentId) {
+        try {
+            const comment = await Comment.findById(commentId).populate('userId', 'name');
+            if (!comment) {
+                throw new Error("Comment not found");
+            }
+    
+            return {
+                comment,
+                likesCount: comment.likes.length,
+            };
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+    
+
+    // Fetch children recursively
+    static async getChildren(parentId) {
         const children = await Comment
-                                .find({ parentCommentId: parentId})
-                                .sort({ createdAt: -1 })
-                                .populate('userId', 'name');
+            .find({ parentCommentId: parentId })
+            .sort({ createdAt: -1 })
+            .populate('userId', 'name');
         return Promise.all(children.map(async (child) => ({
             ...child._doc,
             userName: child.userId.name,
@@ -114,8 +154,8 @@ export default class CommentService {
     }
 
     // Recursively delete nested comments
-    static async deleteNestedComments(parentId){
-        const children = await Comment.find({parentCommentId: parentId});
+    static async deleteNestedComments(parentId) {
+        const children = await Comment.find({ parentCommentId: parentId });
         let deletedCount = 0;
         for (const child of children) {
             // Recursively delete children comment
@@ -128,7 +168,7 @@ export default class CommentService {
     }
 
     // Find the topmost parent comment ID
-    static async getTopmostParentCommentId(commentDetails){
+    static async getTopmostParentCommentId(commentDetails) {
         let currentComment = commentDetails;
         while (currentComment.parentCommentId) {
             currentComment = await Comment.findById(currentComment.parentCommentId);
